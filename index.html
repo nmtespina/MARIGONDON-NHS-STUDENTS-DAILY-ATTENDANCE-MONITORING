@@ -3,320 +3,110 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MNHS Attendance - 10-Espina</title>
+  <title>MNHS Daily Attendance Tracker</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      background-color: #eef3f9;
-      font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      min-height: 100vh;
-      padding: 1.5rem;
-      color: #0b2b4a;
-      position: relative;
-      overflow-x: hidden;
-    }
-
-    /* Background Watermark */
-    .watermark {
-      position: fixed;
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      width: 85vw; max-width: 750px;
-      opacity: 0.06; 
-      z-index: 0;
-      pointer-events: none;
-      user-select: none;
-    }
-
-    .app-card {
-      background: rgba(255, 255, 255, 0.92);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      max-width: 1100px;
-      width: 100%;
-      border-radius: 28px;
-      box-shadow: 0 20px 50px -15px rgba(0, 30, 60, 0.25);
-      padding: 2rem;
-      position: relative;
-      z-index: 1;
-    }
-
-    .school-header {
-      text-align: center;
-      border-bottom: 3px solid #1e5a8a;
-      padding-bottom: 1.25rem;
-      margin-bottom: 1.5rem;
-    }
-    .school-header h1 {
-      font-size: 1.6rem; font-weight: 700; color: #0b2b4a;
-      letter-spacing: 0.5px; text-transform: uppercase;
-    }
-    .school-header h2 {
-      font-size: 1.05rem; font-weight: 600; color: #1e5a8a;
-      margin-top: 6px; letter-spacing: 0.3px;
-    }
-    .school-header .sub {
-      font-size: 0.85rem; color: #5c7b96; margin-top: 6px; font-weight: 500;
-    }
-
-    .live-date {
-      display: inline-flex; align-items: center; gap: 10px;
-      background: #eaf1f8; border: 1.5px solid #c8d9e9;
-      padding: 0.55rem 1.3rem; border-radius: 40px;
-      font-size: 0.95rem; font-weight: 700; color: #0b2b4a; margin-top: 0.85rem;
-    }
-    .live-date .dot {
-      width: 10px; height: 10px; border-radius: 50%;
-      background: #0e6b3b; animation: pulse 1.8s infinite;
-    }
+    body { background-color: #eef3f9; font-family: 'Segoe UI', Roboto, sans-serif; display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; padding: 1.5rem; color: #0b2b4a; position: relative; overflow-x: hidden; }
+    .watermark { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 85vw; max-width: 750px; opacity: 0.06; z-index: 0; pointer-events: none; }
+    .app-card { background: rgba(255, 255, 255, 0.92); backdrop-filter: blur(10px); max-width: 1200px; width: 100%; border-radius: 28px; box-shadow: 0 20px 50px -15px rgba(0, 30, 60, 0.25); padding: 2rem; position: relative; z-index: 1; }
+    
+    .school-header { text-align: center; border-bottom: 3px solid #1e5a8a; padding-bottom: 1.25rem; margin-bottom: 1.5rem; }
+    .school-header h1 { font-size: 1.8rem; font-weight: 700; color: #0b2b4a; text-transform: uppercase; }
+    .school-header h2 { font-size: 1.1rem; font-weight: 800; color: #8b0000; margin-top: 6px; text-transform: uppercase; }
+    .live-date { display: inline-flex; align-items: center; gap: 10px; background: #eaf1f8; border: 1.5px solid #c8d9e9; padding: 0.55rem 1.3rem; border-radius: 40px; font-size: 0.95rem; font-weight: 700; margin-top: 0.85rem; }
+    .live-date .dot { width: 10px; height: 10px; border-radius: 50%; background: #0e6b3b; animation: pulse 1.8s infinite; }
     @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
 
-    /* Time Window Banners */
-    .time-banner {
-      display: flex; flex-wrap: wrap; gap: 12px;
-      justify-content: center; margin-bottom: 1.5rem;
-    }
-    .time-chip {
-      background: #f0f5fa; border: 1px solid #d4e2ee;
-      padding: 0.6rem 1.2rem; border-radius: 40px;
-      font-size: 0.9rem; font-weight: 600;
-      display: flex; align-items: center; gap: 8px; color: #2e4e6c;
-    }
-    .time-chip.active {
-      background: #e3f6e9; border-color: #9ad4ab; color: #0e6b3b;
-    }
-    .time-chip.inactive {
-      background: #fdf2f2; border-color: #f0c0c0; color: #b13a3a;
-    }
-    .time-chip .dot {
-      width: 10px; height: 10px; border-radius: 50%;
-      background: currentColor; animation: pulse 1.8s infinite;
-    }
+    .time-banner { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-bottom: 1.5rem; }
+    .time-chip { background: #fff; border: 1px solid #cbdae6; padding: 0.6rem 1.2rem; border-radius: 40px; font-size: 0.85rem; font-weight: 600; color: #2e4e6c; }
 
-    /* Instructions Box */
-    .instruction-box {
-      background: #e8f4fc;
-      border-left: 5px solid #1e5a8a;
-      border-radius: 8px;
-      padding: 1rem 1.25rem;
-      margin-bottom: 1.5rem;
-      color: #13446b;
-      font-size: 0.9rem;
-      box-shadow: 0 2px 8px rgba(30, 90, 138, 0.05);
-    }
-    .instruction-box h4 {
-      margin-bottom: 0.4rem;
-      font-size: 0.95rem;
-      display: flex; align-items: center; gap: 6px;
-    }
+    .instruction-box { background: #e8f4fc; border-left: 5px solid #1e5a8a; border-radius: 8px; padding: 1rem 1.25rem; margin-bottom: 1.5rem; font-size: 0.9rem; color: #13446b; }
     .instruction-box ul { margin-left: 1.5rem; line-height: 1.6; }
-    .instruction-box li { margin-bottom: 4px; }
-    .instruction-box li:last-child { margin-bottom: 0; }
 
-    .form-card {
-      background: #f7fafd; border-radius: 20px; padding: 1.5rem;
-      margin-bottom: 1.75rem; border: 1px solid #e2eaf1;
-    }
-    .form-title {
-      font-size: 1rem; font-weight: 700; color: #0b2b4a; margin-bottom: 1rem;
-      display: flex; align-items: center; gap: 8px;
-    }
+    .form-card { background: #f7fafd; border-radius: 20px; padding: 1.5rem; margin-bottom: 1.75rem; border: 1px solid #e2eaf1; }
     .form-row { display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end; }
-    .input-group { flex: 1 1 200px; display: flex; flex-direction: column; gap: 5px; }
-    .input-group label {
-      font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
-      letter-spacing: 0.04em; color: #3b5e7b;
-    }
-    .input-group input {
-      padding: 0.8rem 1.1rem; border: 1.5px solid #d7e0e8; border-radius: 12px;
-      font-size: 0.95rem; background: white; outline: none; font-family: inherit;
-      transition: 0.15s; width: 100%; text-transform: uppercase;
-    }
-    .input-group input:focus {
-      border-color: #1e5a8a; box-shadow: 0 0 0 4px rgba(30, 90, 138, 0.12);
-    }
+    .input-group { flex: 1 1 120px; display: flex; flex-direction: column; gap: 5px; }
+    .input-group label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: #3b5e7b; }
+    .input-group input, .input-group select { padding: 0.8rem 1rem; border: 1.5px solid #d7e0e8; border-radius: 12px; font-size: 0.95rem; background: white; outline: none; font-family: inherit; width: 100%; text-transform: uppercase; }
+    .input-group select { cursor: pointer; }
+    .input-group input:focus, .input-group select:focus { border-color: #1e5a8a; box-shadow: 0 0 0 4px rgba(30, 90, 138, 0.12); }
 
-    .btn {
-      border: none; background: #1e5a8a; color: white; font-weight: 600;
-      padding: 0.8rem 1.8rem; border-radius: 12px; font-size: 0.95rem;
-      cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
-      gap: 8px; transition: 0.15s; box-shadow: 0 4px 8px rgba(0, 40, 70, 0.1);
-      font-family: inherit;
-    }
-    .btn:hover:not(:disabled) { background: #13446b; transform: translateY(-1px); }
-    .btn:active:not(:disabled) { transform: translateY(1px); }
-    .btn:disabled { background: #a8bfd0; cursor: not-allowed; box-shadow: none; }
-    
+    .btn { border: none; background: #1e5a8a; color: white; font-weight: 600; padding: 0.8rem 1.5rem; border-radius: 12px; font-size: 0.95rem; cursor: pointer; transition: 0.15s; font-family: inherit; }
+    .btn:hover { transform: translateY(-1px); filter: brightness(1.1); }
     .btn-login { background: #0e6b3b; }
-    .btn-login:hover:not(:disabled) { background: #0a542e; }
     .btn-logout { background: #b1471e; }
-    .btn-logout:hover:not(:disabled) { background: #8a3616; }
-    .btn-secondary {
-      background: white; color: #1e5a8a; border: 1.5px solid #cbdae6; box-shadow: none;
-    }
-    .btn-secondary:hover:not(:disabled) { background: #f5faff; border-color: #1e5a8a; }
-    .btn-download {
-      background: #0e6b3b; box-shadow: 0 4px 10px rgba(14, 107, 59, 0.25);
-    }
-    .btn-download:hover:not(:disabled) { background: #0a542e; }
+    .btn-secondary { background: white; color: #1e5a8a; border: 1.5px solid #cbdae6; }
+    .btn-download { background: #0e6b3b; }
 
     .msg { margin-top: 0.9rem; font-size: 0.9rem; font-weight: 600; min-height: 1.2rem; }
     .msg.error { color: #b13a3a; }
     .msg.success { color: #0e6b3b; }
-    .msg.info { color: #1e5a8a; }
 
-    .table-wrap {
-      border: 1px solid #e2eaf1; border-radius: 20px; overflow: hidden;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02); margin-bottom: 1.25rem; background: white;
-    }
-    .table-header {
-      display: grid; grid-template-columns: 50px 2.2fr 1fr 1fr 1fr;
-      background: #f1f6fb; padding: 0.85rem 1.25rem; font-weight: 700;
-      font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;
-      color: #2e4e6c; border-bottom: 1px solid #d9e2ec;
-    }
-    .student-row {
-      display: grid; grid-template-columns: 50px 2.2fr 1fr 1fr 1fr;
-      align-items: center; padding: 0.8rem 1.25rem; border-bottom: 1px solid #edf2f7;
-      transition: background 0.1s; font-size: 0.9rem;
-    }
-    .student-row:last-child { border-bottom: none; }
+    .table-wrap { border: 1px solid #e2eaf1; border-radius: 20px; overflow: hidden; margin-bottom: 1.25rem; background: white; }
+    .table-header, .student-row { display: grid; grid-template-columns: 40px 1.8fr 90px 1fr 1fr 80px 80px 90px; align-items: center; }
+    .table-header { background: #f1f6fb; padding: 0.85rem 1rem; font-weight: 700; font-size: 0.75rem; text-transform: uppercase; color: #2e4e6c; border-bottom: 1px solid #d9e2ec; }
+    .student-row { padding: 0.8rem 1rem; border-bottom: 1px solid #edf2f7; font-size: 0.85rem; }
     .student-row:hover { background: #f9fcff; }
-
-    .student-name {
-      font-weight: 600; color: #0d2f4b; display: flex; align-items: center; gap: 10px;
-    }
-    .avatar {
-      width: 32px; height: 32px; background: #1e5a8a; color: white; border-radius: 50%;
-      display: inline-flex; align-items: center; justify-content: center;
-      font-weight: 700; font-size: 0.8rem; text-transform: uppercase; flex-shrink: 0;
-    }
-    .badge {
-      display: inline-block; font-size: 0.75rem; font-weight: 700;
-      padding: 0.25rem 0.75rem; border-radius: 20px; letter-spacing: 0.02em;
-    }
+    .student-name { font-weight: 600; color: #0d2f4b; display: flex; align-items: center; gap: 8px; }
+    .avatar { width: 28px; height: 28px; background: #1e5a8a; color: white; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.75rem; }
+    .badge { display: inline-block; font-size: 0.7rem; font-weight: 700; padding: 0.25rem 0.6rem; border-radius: 20px; }
     .badge.present { background: #dff0e2; color: #0e6b3b; }
     .badge.out { background: #fef0e2; color: #b1651e; }
+    .shift-badge { font-size: 0.7rem; font-weight: 700; color: #5c7b96; background: #eaf1f8; padding: 0.2rem 0.5rem; border-radius: 6px; }
+    .shift-Morning { color: #b1651e; background: #fff3e0; }
+    .shift-Afternoon { color: #1e5a8a; background: #e3f2fd; }
+    .shift-Regular { color: #0e6b3b; background: #e8f5e9; }
 
-    .empty-state {
-      padding: 2.5rem 1.5rem; text-align: center; color: #7a8f9f;
-      font-size: 0.95rem; background: #fafdff;
-    }
-
-    .actions {
-      display: flex; flex-wrap: wrap; gap: 1rem; justify-content: space-between;
-      align-items: center; margin-bottom: 1rem;
-    }
-    .stats {
-      display: flex; flex-wrap: wrap; gap: 1.5rem; font-size: 0.9rem;
-      color: #1e3d5c; background: #eaf1f8; padding: 0.7rem 1.4rem;
-      border-radius: 40px; font-weight: 500;
-    }
-    .stats b { color: #0b2b4a; }
-
-    .admin-row {
-      display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
-      justify-content: flex-end; flex: 1;
-    }
-
-    .modal-overlay {
-      position: fixed; inset: 0; background: rgba(11, 43, 74, 0.55);
-      display: none; align-items: center; justify-content: center;
-      padding: 1.5rem; z-index: 999;
-    }
+    .actions { display: flex; flex-wrap: wrap; gap: 1rem; justify-content: space-between; align-items: center; }
+    .stats { display: flex; gap: 1.5rem; font-size: 0.9rem; background: #eaf1f8; padding: 0.7rem 1.4rem; border-radius: 40px; }
+    
+    .modal-overlay { position: fixed; inset: 0; background: rgba(11, 43, 74, 0.55); display: none; align-items: center; justify-content: center; z-index: 999; }
     .modal-overlay.show { display: flex; }
-    .modal {
-      background: white; border-radius: 20px; padding: 2rem; max-width: 420px;
-      width: 100%; box-shadow: 0 25px 60px rgba(0, 20, 40, 0.35);
-    }
-    .modal h3 { font-size: 1.15rem; margin-bottom: 0.5rem; color: #0b2b4a; }
-    .modal p { font-size: 0.85rem; color: #5c7b96; margin-bottom: 1.2rem; }
-    .modal input[type="password"], .modal input[type="date"] {
-      width: 100%; padding: 0.8rem 1rem; border: 1.5px solid #d7e0e8;
-      border-radius: 12px; font-size: 0.95rem; outline: none; font-family: inherit;
-      margin-bottom: 1rem; background: white; color: #0b2b4a;
-    }
-    .modal input:focus { border-color: #1e5a8a; box-shadow: 0 0 0 4px rgba(30, 90, 138, 0.12); }
-    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
-    .modal .msg { margin-top: 0; margin-bottom: 0.8rem; }
-
-    .footer-note {
-      font-size: 0.78rem; color: #7089a0; display: flex;
-      justify-content: space-between; flex-wrap: wrap; gap: 8px;
-      border-top: 1px solid #e2eaf1; padding-top: 1rem;
-    }
-
-    @media (max-width: 720px) {
-      .app-card { padding: 1.25rem; }
-      .school-header h1 { font-size: 1.2rem; }
-      .table-header, .student-row {
-        grid-template-columns: 36px 1.6fr 0.9fr 0.9fr 0.9fr;
-        padding: 0.7rem 0.75rem; font-size: 0.75rem;
-      }
-      .avatar { width: 26px; height: 26px; font-size: 0.65rem; }
-      .stats { width: 100%; }
-      .watermark { width: 120vw; max-width: none; }
-    }
+    .modal { background: white; border-radius: 20px; padding: 2rem; max-width: 420px; width: 100%; }
+    .modal input { width: 100%; padding: 0.8rem 1rem; border: 1.5px solid #d7e0e8; border-radius: 12px; margin-bottom: 1rem; }
   </style>
 </head>
 <body>
-
-  <img class="watermark" src="https://i.ibb.co/6PZ8Z6B/mnhs-logo.png" alt="School Logo">
-
+  <img class="watermark" src="https://i.ibb.co/6PZ8Z6B/mnhs-logo.png" alt="Logo">
   <div class="app-card">
     <div class="school-header">
       <h1>Marigondon National High School</h1>
-      <h2>10-Espina (SPTVE – Cosmetology)</h2>
-      <div class="sub">Daily Attendance Tracker</div>
-      <div class="live-date">
-        <span class="dot"></span>
-        <span id="liveDateText">Loading date…</span>
-      </div>
+      <h2>Daily Attendance Tracker</h2>
+      <div class="live-date"><span class="dot"></span><span id="liveDateText">Loading...</span></div>
     </div>
 
-    <!-- LIVE TIME STATUS -->
     <div class="time-banner">
-      <div class="time-chip" id="loginWindowChip">
-        <span class="dot"></span>
-        <span>Log-in: 7:00 AM – 8:00 AM</span>
-      </div>
-      <div class="time-chip" id="logoutWindowChip">
-        <span class="dot"></span>
-        <span>Log-out: 5:00 PM – 6:00 PM</span>
-      </div>
-      <div class="time-chip" style="background:#fff; border-color:#cbdae6;">
-        🕒 <span id="currentTimeText">--:--</span>
-      </div>
+      <div class="time-chip">🌅 <strong>Morning:</strong> 6-7AM / 12-1PM</div>
+      <div class="time-chip">🌇 <strong>Afternoon:</strong> 12-1PM / 5-6PM</div>
+      <div class="time-chip">☀️ <strong>Regular:</strong> 6-8AM / 5-6PM</div>
+      <div class="time-chip">🕒 <span id="currentTimeText">--:--</span></div>
     </div>
 
     <div class="instruction-box">
-      <h4>📌 Quick Reminders</h4>
       <ul>
-        <li><strong>Fill out in CAPITAL LETTERS.</strong> (The system will automatically format your input).</li>
-        <li><strong>Must encode the exact same data as the Log-In when you Log-Out.</strong></li>
+        <li><strong>Fill out in CAPITAL LETTERS.</strong></li>
+        <li><strong>Must encode the exact same data for Log-Out.</strong></li>
+        <li><strong>Section:</strong> Just write the <strong>LAST NAME of the adviser</strong>.</li>
       </ul>
     </div>
 
     <div class="form-card">
-      <div class="form-title">👤 Student Attendance</div>
       <div class="form-row">
-        <div class="input-group">
-          <label>Last Name</label>
-          <input type="text" id="lastName" placeholder="DELA CRUZ" autocomplete="off">
+        <div class="input-group" style="flex: 1 1 160px;">
+          <label>Select Shift</label>
+          <select id="shift">
+            <option value="" disabled selected>-- Choose Shift --</option>
+            <option value="Morning">Morning Shift</option>
+            <option value="Afternoon">Afternoon Shift</option>
+            <option value="Regular">Regular Shift</option>
+          </select>
         </div>
-        <div class="input-group">
-          <label>First Name</label>
-          <input type="text" id="firstName" placeholder="JUAN" autocomplete="off">
-        </div>
-        <div class="input-group" style="flex: 0 1 130px;">
-          <label>Middle Initial</label>
-          <input type="text" id="middleInitial" placeholder="A" maxlength="2" autocomplete="off">
-        </div>
-        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <div class="input-group" style="flex: 2 1 130px;"><label>Last Name</label><input type="text" id="lastName" placeholder="DELA CRUZ"></div>
+        <div class="input-group" style="flex: 2 1 130px;"><label>First Name</label><input type="text" id="firstName" placeholder="JUAN"></div>
+        <div class="input-group" style="flex: 0 1 70px;"><label>M.I.</label><input type="text" id="middleInitial" maxlength="2"></div>
+        <div class="input-group" style="flex: 0 1 80px;"><label>Grade Lvl</label><input type="text" id="gradeLevel" placeholder="7" maxlength="2"></div>
+        <div class="input-group" style="flex: 1 1 120px;"><label>Section (Adviser)</label><input type="text" id="section" placeholder="DELA CRUZ"></div>
+        <div style="display:flex; gap:10px; margin-left:auto;">
           <button class="btn btn-login" id="loginBtn">✅ Log In</button>
           <button class="btn btn-logout" id="logoutBtn">🚪 Log Out</button>
           <button class="btn btn-secondary" id="clearBtn">Clear</button>
@@ -327,11 +117,7 @@
 
     <div class="table-wrap">
       <div class="table-header">
-        <div>#</div>
-        <div>Student Name</div>
-        <div>Log-in</div>
-        <div>Log-out</div>
-        <div>Status</div>
+        <div>#</div><div>Student Name</div><div>Shift</div><div>Grade</div><div>Section</div><div>Log-in</div><div>Log-out</div><div>Status</div>
       </div>
       <div id="attendanceListContainer"></div>
     </div>
@@ -342,32 +128,17 @@
         <div>🚪 Logged Out: <b id="outCount">0</b></div>
         <div>👥 Total: <b id="totalCount">0</b></div>
       </div>
-      <div class="admin-row">
-        <button class="btn btn-download" id="downloadBtn">⬇ Download Excel (Admin)</button>
-      </div>
-    </div>
-
-    <div class="footer-note">
-      <span>Attendance is saved locally on this device.</span>
-      <span id="lastUpdated"></span>
+      <button class="btn btn-download" id="downloadBtn">⬇ Download Excel (Admin)</button>
     </div>
   </div>
 
-  <!-- ADMIN MODAL -->
   <div class="modal-overlay" id="adminModal">
     <div class="modal">
       <h3>🔒 Admin Access</h3>
-      <p>Enter password and select the date you want to download.</p>
-      
-      <label style="font-size: 0.8rem; font-weight: bold; color: #1e5a8a; margin-bottom: 4px; display: block;">Select Date:</label>
       <input type="date" id="downloadDateInput">
-      
-      <label style="font-size: 0.8rem; font-weight: bold; color: #1e5a8a; margin-bottom: 4px; display: block;">Password:</label>
-      <input type="password" id="adminPassword" placeholder="Admin password" autocomplete="off">
-      
+      <input type="password" id="adminPassword" placeholder="Password">
       <div class="msg error" id="modalMsg"></div>
-      
-      <div class="modal-actions">
+      <div style="display:flex; gap:10px; justify-content:flex-end;">
         <button class="btn btn-secondary" id="cancelModalBtn">Cancel</button>
         <button class="btn btn-download" id="confirmDownloadBtn">Download</button>
       </div>
@@ -377,432 +148,169 @@
   <script>
     (function () {
       const ADMIN_PASSWORD = 'mnhs-admin';   // 🔑 Change this password!
-      const STORAGE_KEY = 'mnhs_attendance_v2';
-
-      // ⏰ TIME RESTRICTIONS (24-hour format)
-      const LOGIN_START  = 7;   // 7:00 AM
-      const LOGIN_END    = 8;   // 8:00 AM (exclusive of 8:00:00)
-      const LOGOUT_START = 17;  // 5:00 PM
-      const LOGOUT_END   = 18;  // 6:00 PM
+      
+      // ⚠️ PASTE YOUR GOOGLE APPS SCRIPT URL HERE ⚠️
+      const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyEoWom1MmGjSFUGJZJv3RZR5WCju6Pf0hxxaxnQfxTw1imLYvdw2X-zrl2Y3ChFrOH1w/exec'; 
 
       let records = [];
       let currentDate = new Date().toLocaleDateString('en-CA');
 
       const $ = (id) => document.getElementById(id);
-      const lastNameInput = $('lastName');
-      const firstNameInput = $('firstName');
-      const middleInitialInput = $('middleInitial');
-      const loginBtn = $('loginBtn');
-      const logoutBtn = $('logoutBtn');
-      const clearBtn = $('clearBtn');
-      const messageEl = $('message');
-      const listContainer = $('attendanceListContainer');
-      const presentCountEl = $('presentCount');
-      const outCountEl = $('outCount');
-      const totalCountEl = $('totalCount');
-      const lastUpdatedEl = $('lastUpdated');
-      const downloadBtn = $('downloadBtn');
-      const liveDateText = $('liveDateText');
-      const loginWindowChip = $('loginWindowChip');
-      const logoutWindowChip = $('logoutWindowChip');
-      const currentTimeText = $('currentTimeText');
+      const shiftInput = $('shift'), lastNameInput = $('lastName'), firstNameInput = $('firstName');
+      const middleInitialInput = $('middleInitial'), gradeLevelInput = $('gradeLevel'), sectionInput = $('section');
+      const loginBtn = $('loginBtn'), logoutBtn = $('logoutBtn'), clearBtn = $('clearBtn');
+      const messageEl = $('message'), listContainer = $('attendanceListContainer');
+      const presentCountEl = $('presentCount'), outCountEl = $('outCount'), totalCountEl = $('totalCount');
+      
+      const adminModal = $('adminModal'), adminPasswordInput = $('adminPassword');
+      const downloadDateInput = $('downloadDateInput'), modalMsg = $('modalMsg');
+      const confirmDownloadBtn = $('confirmDownloadBtn'), cancelModalBtn = $('cancelModalBtn');
 
-      const adminModal = $('adminModal');
-      const adminPasswordInput = $('adminPassword');
-      const downloadDateInput = $('downloadDateInput');
-      const modalMsg = $('modalMsg');
-      const confirmDownloadBtn = $('confirmDownloadBtn');
-      const cancelModalBtn = $('cancelModalBtn');
-
-      // ==========================================
-      // TIME & DATE HELPERS
-      // ==========================================
-      function todayStr() {
-        return new Date().toLocaleDateString('en-CA');
-      }
-
-      function nowHourFloat() {
-        const d = new Date();
-        return d.getHours() + d.getMinutes() / 60 + d.getSeconds() / 3600;
-      }
-
-      function inLoginWindow() {
-        const h = nowHourFloat();
-        return h >= LOGIN_START && h < LOGIN_END;
-      }
-
-      function inLogoutWindow() {
-        const h = nowHourFloat();
-        return h >= LOGOUT_START && h < LOGOUT_END;
-      }
-
+      function todayStr() { return new Date().toLocaleDateString('en-CA'); }
       function prettyDateFromString(dateStr) {
         if (!dateStr) return '';
         const [y, m, d] = dateStr.split('-');
-        const dateObj = new Date(y, m - 1, d);
-        return dateObj.toLocaleDateString('en-US', {
-          weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-        });
+        return new Date(y, m - 1, d).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
       }
-
-      function prettyDate() {
-        return prettyDateFromString(currentDate);
-      }
-
-      function formatTime(iso) {
-        if (!iso) return '—';
-        return new Date(iso).toLocaleTimeString('en-US', {
-          hour: '2-digit', minute: '2-digit'
-        });
-      }
-
-      function makeKey(last, first, mi) {
-        return (last + '|' + first + '|' + mi).toLowerCase().trim();
-      }
-
-      function buildFullName(last, first, mi) {
-        const l = last.toUpperCase().trim();
-        const f = first.toUpperCase().trim();
-        const miPart = mi ? ' ' + mi.toUpperCase().replace(/[^A-Z]/g, '').charAt(0) + '.' : '';
-        return `${l}, ${f}${miPart}`;
-      }
-
-      function escapeHtml(s) {
-        const d = document.createElement('div');
-        d.textContent = s;
-        return d.innerHTML;
-      }
-
+      function formatTime(iso) { if (!iso) return '—'; return new Date(iso).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }); }
+      function escapeHtml(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+      
       function setMessage(text, type = 'info') {
         messageEl.textContent = text;
         messageEl.className = 'msg ' + type;
-        if (text) {
-          clearTimeout(setMessage._t);
-          setMessage._t = setTimeout(() => {
-            messageEl.textContent = '';
-            messageEl.className = 'msg';
-          }, 4500);
-        }
+        if (text) { clearTimeout(setMessage._t); setMessage._t = setTimeout(() => { messageEl.textContent = ''; }, 4500); }
       }
 
-      // ==========================================
-      // DATA & STORAGE
-      // ==========================================
-      function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(records)); }
-      function load() {
-        try { records = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
-        catch { records = []; }
-      }
-      
-      function getRecordsByDate(dateStr) {
-        return records.filter(r => r.date === dateStr);
+      async function fetchDataFromSheet() {
+        if (!SCRIPT_URL || SCRIPT_URL === 'YOUR_WEB_APP_URL_HERE') return setMessage('⚠️ Please add Google Script URL', 'error');
+        try {
+          const res = await fetch(SCRIPT_URL);
+          const data = await res.json();
+          records = data.filter(r => r.date === currentDate);
+          render();
+        } catch (e) { setMessage('Sync error. Check connection.', 'error'); }
       }
 
-      // ==========================================
-      // RENDER
-      // ==========================================
+      async function sendToSheet(payload) {
+        try {
+          const formData = new URLSearchParams();
+          for (const key in payload) formData.append(key, payload[key]);
+          await fetch(SCRIPT_URL, { method: 'POST', body: formData });
+          setTimeout(fetchDataFromSheet, 1000); 
+        } catch (e) { setMessage('❌ Failed to save. Check internet.', 'error'); }
+      }
+
       function render() {
-        const list = getRecordsByDate(currentDate).slice().sort((a, b) =>
-          new Date(a.loginTime || 0) - new Date(b.loginTime || 0)
-        );
-
+        const list = records.slice().sort((a, b) => new Date(a.loginTime || 0) - new Date(b.loginTime || 0));
         if (list.length === 0) {
-          listContainer.innerHTML = `<div class="empty-state">No students have logged in yet today.</div>`;
+          listContainer.innerHTML = `<div style="padding:2rem; text-align:center; color:#7a8f9f;">No students yet today.</div>`;
         } else {
           listContainer.innerHTML = list.map((r, i) => {
-            const initial = (r.lastName || '?').charAt(0).toUpperCase();
-            const status = r.logoutTime
-              ? '<span class="badge out">Logged Out</span>'
-              : '<span class="badge present">Present</span>';
+            const shiftClass = r.shift ? `shift-${r.shift.split(' ')[0]}` : '';
             return `
               <div class="student-row">
                 <div>${i + 1}</div>
-                <div class="student-name">
-                  <span class="avatar">${escapeHtml(initial)}</span>
-                  ${escapeHtml(r.fullName)}
-                </div>
-                <div style="font-size:0.85rem;color:#385d7a;">${formatTime(r.loginTime)}</div>
-                <div style="font-size:0.85rem;color:#385d7a;">${formatTime(r.logoutTime)}</div>
-                <div>${status}</div>
-              </div>
-            `;
+                <div class="student-name"><span class="avatar">${escapeHtml((r.lastName||'?').charAt(0))}</span>${escapeHtml(r.fullName)}</div>
+                <div><span class="shift-badge ${shiftClass}">${escapeHtml(r.shift || 'N/A')}</span></div>
+                <div style="font-weight:bold; color:#1e5a8a;">${escapeHtml(r.gradeLevel)}</div>
+                <div>${escapeHtml(r.section)}</div>
+                <div style="font-size:0.8rem;">${formatTime(r.loginTime)}</div>
+                <div style="font-size:0.8rem;">${formatTime(r.logoutTime)}</div>
+                <div>${r.logoutTime ? '<span class="badge out">Out</span>' : '<span class="badge present">Present</span>'}</div>
+              </div>`;
           }).join('');
         }
-
-        const present = list.filter(r => !r.logoutTime).length;
-        const out = list.filter(r => r.logoutTime).length;
-        presentCountEl.textContent = present;
-        outCountEl.textContent = out;
+        presentCountEl.textContent = list.filter(r => !r.logoutTime).length;
+        outCountEl.textContent = list.filter(r => r.logoutTime).length;
         totalCountEl.textContent = list.length;
-
-        lastUpdatedEl.textContent = 'Updated: ' + new Date().toLocaleTimeString([], {
-          hour: '2-digit', minute: '2-digit'
-        });
-
-        updateWindowChips();
       }
 
-      // ==========================================
-      // TIME WINDOWS & UI UPDATES
-      // ==========================================
-      function updateWindowChips() {
-        const loginActive = inLoginWindow();
-        const logoutActive = inLogoutWindow();
-
-        loginWindowChip.classList.toggle('active', loginActive);
-        loginWindowChip.classList.toggle('inactive', !loginActive);
-        
-        logoutWindowChip.classList.toggle('active', logoutActive);
-        logoutWindowChip.classList.toggle('inactive', !logoutActive);
-
-        // Enable/Disable Buttons based on time
-        loginBtn.disabled = !loginActive;
-        logoutBtn.disabled = !logoutActive;
-      }
-
-      // ==========================================
-      // STUDENT ACTIONS
-      // ==========================================
-      function readNameFields() {
-        const last = lastNameInput.value.trim().toUpperCase();
-        const first = firstNameInput.value.trim().toUpperCase();
-        const mi = middleInitialInput.value.trim().toUpperCase();
-        
-        if (!last || !first) {
-          setMessage('Please enter both Last Name and First Name.', 'error');
-          return null;
-        }
-        return { last, first, mi };
+      function readFormFields() {
+        const shift = shiftInput.value.trim(), last = lastNameInput.value.trim().toUpperCase();
+        const first = firstNameInput.value.trim().toUpperCase(), mi = middleInitialInput.value.trim().toUpperCase();
+        const grade = gradeLevelInput.value.trim().toUpperCase(), section = sectionInput.value.trim().toUpperCase();
+        if (!shift || !last || !first || !grade || !section) { setMessage('Please fill all fields.', 'error'); return null; }
+        const miPart = mi ? ' ' + mi.replace(/[^A-Z]/g, '').charAt(0) + '.' : '';
+        return { shift, last, first, mi, grade, section, fullName: `${last}, ${first}${miPart}` };
       }
 
       function handleLogin() {
-        if (!inLoginWindow()) {
-          setMessage('⏰ Log-in is only allowed from 7:00 AM to 8:00 AM.', 'error');
-          return;
-        }
+        const n = readFormFields(); if (!n) return;
+        const key = `${n.shift}|${n.last}|${n.first}|${n.mi}|${n.grade}|${n.section}`.toLowerCase();
+        if (records.find(r => r.key === key)) return setMessage('Already logged in for this shift today.', 'error');
 
-        const n = readNameFields();
-        if (!n) return;
-
-        const key = makeKey(n.last, n.first, n.mi);
-        const existing = getRecordsByDate(currentDate).find(r => r.key === key);
-        if (existing) {
-          setMessage(`"${buildFullName(n.last, n.first, n.mi)}" already logged in today.`, 'error');
-          return;
-        }
-
-        const now = new Date();
-        records.push({
-          id: Date.now() + '-' + Math.random().toString(36).substring(2, 7),
-          key,
-          lastName: n.last,
-          firstName: n.first,
-          middleInitial: n.mi,
-          fullName: buildFullName(n.last, n.first, n.mi),
-          date: currentDate,
-          loginTime: now.toISOString(),
-          logoutTime: null
-        });
-        save();
-        render();
-        clearInputs();
-        setMessage(`✅ ${buildFullName(n.last, n.first, n.mi)} logged in successfully!`, 'success');
+        const payload = { date: currentDate, action: 'Log In', shift: n.shift, lastName: n.last, firstName: n.first, mi: n.mi, grade: n.grade, section: n.section, time: new Date().toISOString() };
+        setMessage('Saving...', 'info'); sendToSheet(payload);
+        records.push({ key, shift: n.shift, lastName: n.last, firstName: n.first, middleInitial: n.mi, gradeLevel: n.grade, section: n.section, fullName: n.fullName, date: currentDate, loginTime: payload.time, logoutTime: null });
+        clearInputs(); render(); setMessage(`✅ ${n.fullName} logged in!`, 'success');
       }
 
       function handleLogout() {
-        if (!inLogoutWindow()) {
-          setMessage('⏰ Log-out is only allowed from 5:00 PM to 6:00 PM.', 'error');
-          return;
-        }
+        const n = readFormFields(); if (!n) return;
+        const key = `${n.shift}|${n.last}|${n.first}|${n.mi}|${n.grade}|${n.section}`.toLowerCase();
+        const rec = records.find(r => r.key === key);
+        if (!rec) return setMessage('No record found. Make sure all details match your log-in.', 'error');
+        if (rec.logoutTime) return setMessage('Already logged out.', 'error');
 
-        const n = readNameFields();
-        if (!n) return;
-
-        const key = makeKey(n.last, n.first, n.mi);
-        const rec = getRecordsByDate(currentDate).find(r => r.key === key);
-        
-        if (!rec) {
-          setMessage(`No log-in record found for "${buildFullName(n.last, n.first, n.mi)}" today. Make sure the spelling is exactly the same as your log-in.`, 'error');
-          return;
-        }
-        if (rec.logoutTime) {
-          setMessage(`"${rec.fullName}" already logged out today.`, 'error');
-          return;
-        }
-
-        rec.logoutTime = new Date().toISOString();
-        save();
-        render();
-        clearInputs();
-        setMessage(`🚪 ${rec.fullName} logged out successfully!`, 'success');
+        const payload = { date: currentDate, action: 'Log Out', shift: n.shift, lastName: n.last, firstName: n.first, mi: n.mi, grade: n.grade, section: n.section, time: new Date().toISOString() };
+        setMessage('Saving...', 'info'); sendToSheet(payload);
+        rec.logoutTime = payload.time; clearInputs(); render(); setMessage(`🚪 ${rec.fullName} logged out!`, 'success');
       }
 
-      function clearInputs() {
-        lastNameInput.value = '';
-        firstNameInput.value = '';
-        middleInitialInput.value = '';
-        lastNameInput.focus();
-      }
+      function clearInputs() { shiftInput.value = ''; lastNameInput.value = ''; firstNameInput.value = ''; middleInitialInput.value = ''; gradeLevelInput.value = ''; sectionInput.value = ''; lastNameInput.focus(); }
 
-      // ==========================================
-      // ADMIN DOWNLOAD
-      // ==========================================
-      function openAdminModal() {
-        downloadDateInput.value = currentDate;
-        adminPasswordInput.value = '';
-        modalMsg.textContent = '';
-        adminModal.classList.add('show');
-        setTimeout(() => adminPasswordInput.focus(), 100);
-      }
+      function openAdminModal() { downloadDateInput.value = currentDate; adminPasswordInput.value = ''; modalMsg.textContent = ''; adminModal.classList.add('show'); }
       
-      function closeAdminModal() { 
-        adminModal.classList.remove('show'); 
+      async function confirmDownload() {
+        if (adminPasswordInput.value !== ADMIN_PASSWORD) return modalMsg.textContent = '❌ Incorrect password.';
+        const selDate = downloadDateInput.value;
+        try {
+          const res = await fetch(SCRIPT_URL); const allData = await res.json();
+          const list = allData.filter(r => r.date === selDate);
+          if (list.length === 0) return modalMsg.textContent = '❌ No records found for this date.';
+          adminModal.classList.remove('show'); downloadExcel(selDate, list);
+        } catch (e) { modalMsg.textContent = `❌ Error connecting to Google.`; }
       }
-      
-      function confirmDownload() {
-        if (adminPasswordInput.value !== ADMIN_PASSWORD) {
-          modalMsg.textContent = '❌ Incorrect password.';
-          return;
-        }
+
+      function downloadExcel(dateStr, rawRows) {
+        const grouped = {};
+        rawRows.forEach(row => {
+          const key = `${row.shift}|${row.lastName}|${row.firstName}|${row.mi}|${row.grade}|${row.section}`.toLowerCase();
+          if (!grouped[key]) grouped[key] = { ...row, fullName: `${row.lastName}, ${row.firstName} ${row.mi ? row.mi.charAt(0)+'.' : ''}`, loginTime: null, logoutTime: null };
+          if (row.action === 'Log In') grouped[key].loginTime = row.timestamp;
+          if (row.action === 'Log Out') grouped[key].logoutTime = row.timestamp;
+        });
+        const list = Object.values(grouped).sort((a, b) => new Date(a.loginTime || 0) - new Date(b.loginTime || 0));
         
-        const selectedDate = downloadDateInput.value;
-        if (!selectedDate) {
-          modalMsg.textContent = '❌ Please select a date.';
-          return;
-        }
+        const rowsHtml = list.map((r, i) => `
+          <tr><td>${i + 1}</td><td>${escapeHtml(r.lastName)}</td><td>${escapeHtml(r.firstName)}</td><td>${escapeHtml(r.mi || '')}</td>
+          <td>${escapeHtml(r.grade)}</td><td>${escapeHtml(r.section)}</td><td>${escapeHtml(r.shift)}</td><td>${escapeHtml(r.fullName)}</td>
+          <td>${formatTime(r.loginTime)}</td><td>${formatTime(r.logoutTime)}</td><td>${r.logoutTime ? 'Logged Out' : 'Present'}</td></tr>`).join('');
 
-        const listToDownload = getRecordsByDate(selectedDate);
-        if (listToDownload.length === 0) {
-          modalMsg.textContent = `❌ No attendance records found for ${selectedDate}.`;
-          return;
-        }
+        const html = `<html><head><meta charset="UTF-8"></head><body><table border="1"><thead>
+          <tr><th colspan="11" style="font-size:16px;font-weight:bold;text-align:center;">Marigondon National High School</th></tr>
+          <tr><th colspan="11" style="font-size:13px;text-align:center;color:#8b0000;">DAILY ATTENDANCE TRACKER — ${prettyDateFromString(dateStr)}</th></tr>
+          <tr style="background:#1e5a8a;color:#ffffff;font-weight:bold;"><th>#</th><th>Last Name</th><th>First Name</th><th>M.I.</th><th>Grade</th><th>Section</th><th>Shift</th><th>Full Name</th><th>Log-in</th><th>Log-out</th><th>Status</th></tr>
+          </thead><tbody>${rowsHtml}</tbody></table></body></html>`;
 
-        closeAdminModal();
-        downloadExcel(selectedDate, listToDownload);
+        const blob = new Blob([html], { type: 'application/vnd.ms-excel' });
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+        a.download = `MNHS_Attendance_${dateStr}.xls`; a.click();
       }
 
-      function downloadExcel(dateStr, list) {
-        list.sort((a, b) => new Date(a.loginTime || 0) - new Date(b.loginTime || 0));
-        const prettyDateStr = prettyDateFromString(dateStr);
-
-        const rows = list.map((r, i) => `
-          <tr>
-            <td>${i + 1}</td>
-            <td>${escapeHtml(r.lastName)}</td>
-            <td>${escapeHtml(r.firstName)}</td>
-            <td>${escapeHtml(r.middleInitial || '')}</td>
-            <td>${escapeHtml(r.fullName)}</td>
-            <td>${formatTime(r.loginTime)}</td>
-            <td>${formatTime(r.logoutTime)}</td>
-            <td>${r.logoutTime ? 'Logged Out' : 'Present'}</td>
-          </tr>
-        `).join('');
-
-        const html = `
-          <html xmlns:o="urn:schemas-microsoft-com:office:office"
-                xmlns:x="urn:schemas-microsoft-com:office:excel"
-                xmlns="http://www.w3.org/TR/REC-html40">
-          <head><meta charset="UTF-8">
-            <!--[if gte mso 9]>
-            <xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet>
-              <x:Name>Attendance</x:Name>
-              <x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions>
-            </x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml>
-            <![endif]-->
-          </head>
-          <body>
-            <table border="1">
-              <thead>
-                <tr><th colspan="8" style="font-size:16px;font-weight:bold;text-align:center;">
-                  Marigondon National High School
-                </th></tr>
-                <tr><th colspan="8" style="font-size:13px;text-align:center;">
-                  10-Espina (SPTVE – Cosmetology) — ${prettyDateStr}
-                </th></tr>
-                <tr style="background:#1e5a8a;color:#ffffff;font-weight:bold;">
-                  <th>#</th><th>Last Name</th><th>First Name</th><th>M.I.</th>
-                  <th>Full Name</th><th>Log-in</th><th>Log-out</th><th>Status</th>
-                </tr>
-              </thead>
-              <tbody>${rows}</tbody>
-            </table>
-          </body></html>`;
-
-        const blob = new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `MNHS_10-Espina_Attendance_${dateStr}.xls`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-      }
-
-      // ==========================================
-      // SYSTEM TICK (Clock, Date Rollover, & Time Windows)
-      // ==========================================
       function tick() {
-        const pretty = prettyDate();
-        if (liveDateText.textContent !== pretty) {
-          liveDateText.textContent = pretty;
-        }
-
         const now = new Date();
-        currentTimeText.textContent = now.toLocaleTimeString('en-US', {
-          hour: '2-digit', minute: '2-digit', second: '2-digit'
-        });
-
-        // Auto-switch date at midnight
-        const t = todayStr();
-        if (t !== currentDate) {
-          currentDate = t;
-          render();
-        }
-        
-        // Update button states and active/inactive colors
-        updateWindowChips();
+        $('liveDateText').textContent = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        $('currentTimeText').textContent = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        const t = todayStr(); if (t !== currentDate) { currentDate = t; fetchDataFromSheet(); }
       }
 
-      function init() {
-        currentDate = todayStr();
-        load();
-        render();
-        tick();
-        setInterval(tick, 1000);
-        lastNameInput.focus();
-      }
-
-      // ==========================================
-      // EVENT LISTENERS
-      // ==========================================
-      loginBtn.addEventListener('click', handleLogin);
-      logoutBtn.addEventListener('click', handleLogout);
-      clearBtn.addEventListener('click', () => { clearInputs(); setMessage(''); });
-
-      [lastNameInput, firstNameInput, middleInitialInput].forEach(inp => {
-        inp.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter') { 
-            e.preventDefault(); 
-            // Enter defaults to Log in if window is open, or logout if that window is open
-            if (inLoginWindow()) handleLogin();
-            else if (inLogoutWindow()) handleLogout();
-            else setMessage('Attendance window is currently closed.', 'error');
-          }
-        });
-      });
-
-      downloadBtn.addEventListener('click', openAdminModal);
-      cancelModalBtn.addEventListener('click', closeAdminModal);
-      confirmDownloadBtn.addEventListener('click', confirmDownload);
-      adminPasswordInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') confirmDownload();
-      });
-      adminModal.addEventListener('click', (e) => {
-        if (e.target === adminModal) closeAdminModal();
-      });
-
-      init();
+      function init() { currentDate = todayStr(); fetchDataFromSheet(); tick(); setInterval(tick, 1000); setInterval(fetchDataFromSheet, 30000); }
+      
+      loginBtn.addEventListener('click', handleLogin); logoutBtn.addEventListener('click', handleLogout);
+      clearBtn.addEventListener('click', clearInputs); $('downloadBtn').addEventListener('click', openAdminModal);
+      cancelModalBtn.addEventListener('click', () => adminModal.classList.remove('show'));
+      confirmDownloadBtn.addEventListener('click', confirmDownload); init();
     })();
   </script>
 </body>
