@@ -149,7 +149,7 @@
     (function () {
       const ADMIN_PASSWORD = 'mnhs-admin';   // 🔑 Change this password!
       
-      // ⚠️ PASTE YOUR GOOGLE APPS SCRIPT URL HERE ⚠️
+      // PASTED YOUR GOOGLE APPS SCRIPT URL HERE
       const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyEoWom1MmGjSFUGJZJv3RZR5WCju6Pf0hxxaxnQfxTw1imLYvdw2X-zrl2Y3ChFrOH1w/exec'; 
 
       let records = [];
@@ -181,23 +181,33 @@
         if (text) { clearTimeout(setMessage._t); setMessage._t = setTimeout(() => { messageEl.textContent = ''; }, 4500); }
       }
 
+      // IMPROVED FETCH: Added timestamp to prevent browser caching
       async function fetchDataFromSheet() {
-        if (!SCRIPT_URL || SCRIPT_URL === 'YOUR_WEB_APP_URL_HERE') return setMessage('⚠️ Please add Google Script URL', 'error');
+        if (!SCRIPT_URL) return;
         try {
-          const res = await fetch(SCRIPT_URL);
+          const res = await fetch(SCRIPT_URL + '?t=' + new Date().getTime());
           const data = await res.json();
           records = data.filter(r => r.date === currentDate);
           render();
-        } catch (e) { setMessage('Sync error. Check connection.', 'error'); }
+        } catch (e) { console.error("Sync error:", e); }
       }
 
+      // IMPROVED SAVE: Waits for Google response, then forces a refresh
       async function sendToSheet(payload) {
         try {
           const formData = new URLSearchParams();
           for (const key in payload) formData.append(key, payload[key]);
-          await fetch(SCRIPT_URL, { method: 'POST', body: formData });
-          setTimeout(fetchDataFromSheet, 1000); 
-        } catch (e) { setMessage('❌ Failed to save. Check internet.', 'error'); }
+          
+          await fetch(SCRIPT_URL, { 
+            method: 'POST', 
+            body: formData,
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+          });
+          
+          setTimeout(fetchDataFromSheet, 800); 
+        } catch (e) { 
+          setMessage('❌ Failed to save. Check internet connection.', 'error'); 
+        }
       }
 
       function render() {
@@ -265,7 +275,8 @@
         if (adminPasswordInput.value !== ADMIN_PASSWORD) return modalMsg.textContent = '❌ Incorrect password.';
         const selDate = downloadDateInput.value;
         try {
-          const res = await fetch(SCRIPT_URL); const allData = await res.json();
+          const res = await fetch(SCRIPT_URL + '?t=' + new Date().getTime()); 
+          const allData = await res.json();
           const list = allData.filter(r => r.date === selDate);
           if (list.length === 0) return modalMsg.textContent = '❌ No records found for this date.';
           adminModal.classList.remove('show'); downloadExcel(selDate, list);
