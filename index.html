@@ -149,7 +149,6 @@
     (function () {
       const ADMIN_PASSWORD = 'mnhs-admin';   // 🔑 Change this password!
       
-      // PASTED YOUR GOOGLE APPS SCRIPT URL HERE
       const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyEoWom1MmGjSFUGJZJv3RZR5WCju6Pf0hxxaxnQfxTw1imLYvdw2X-zrl2Y3ChFrOH1w/exec'; 
 
       let records = [];
@@ -181,18 +180,52 @@
         if (text) { clearTimeout(setMessage._t); setMessage._t = setTimeout(() => { messageEl.textContent = ''; }, 4500); }
       }
 
-      // IMPROVED FETCH: Added timestamp to prevent browser caching
+      // THE FIX IS HERE: Forcing all data to be text (strings) so they match perfectly
       async function fetchDataFromSheet() {
         if (!SCRIPT_URL) return;
         try {
           const res = await fetch(SCRIPT_URL + '?t=' + new Date().getTime());
           const data = await res.json();
-          records = data.filter(r => r.date === currentDate);
+          
+          // Rebuild records with forced string matching
+          records = data.filter(r => r.date === currentDate).map(r => {
+            const shift = String(r.shift || '').trim();
+            const last = String(r.lastName || '').trim().toUpperCase();
+            const first = String(r.firstName || '').trim().toUpperCase();
+            const mi = String(r.mi || '').trim().toUpperCase();
+            const grade = String(r.grade || '').trim().toUpperCase();
+            const section = String(r.section || '').trim().toUpperCase();
+            
+            return {
+              key: `${shift}|${last}|${first}|${mi}|${grade}|${section}`.toLowerCase(),
+              shift: shift,
+              lastName: last,
+              firstName: first,
+              middleInitial: mi,
+              gradeLevel: grade,
+              section: section,
+              fullName: `${last}, ${first} ${mi ? mi.charAt(0)+'.' : ''}`.trim(),
+              loginTime: r.action === 'Log In' ? r.timestamp : null,
+              logoutTime: r.action === 'Log Out' ? r.timestamp : null
+            };
+          });
+          
+          // Combine login and logout rows for the same student
+          const grouped = {};
+          records.forEach(r => {
+            if (!grouped[r.key]) {
+              grouped[r.key] = { ...r };
+            } else {
+              if (r.loginTime) grouped[r.key].loginTime = r.loginTime;
+              if (r.logoutTime) grouped[r.key].logoutTime = r.logoutTime;
+            }
+          });
+          records = Object.values(grouped);
+          
           render();
         } catch (e) { console.error("Sync error:", e); }
       }
 
-      // IMPROVED SAVE: Waits for Google response, then forces a refresh
       async function sendToSheet(payload) {
         try {
           const formData = new URLSearchParams();
@@ -250,21 +283,33 @@
         if (records.find(r => r.key === key)) return setMessage('Already logged in for this shift today.', 'error');
 
         const payload = { date: currentDate, action: 'Log In', shift: n.shift, lastName: n.last, firstName: n.first, mi: n.mi, grade: n.grade, section: n.section, time: new Date().toISOString() };
-        setMessage('Saving...', 'info'); sendToSheet(payload);
+        setMessage('Saving...', 'info'); 
+        sendToSheet(payload);
+        
+        // Add to local list immediately so they can't double click
         records.push({ key, shift: n.shift, lastName: n.last, firstName: n.first, middleInitial: n.mi, gradeLevel: n.grade, section: n.section, fullName: n.fullName, date: currentDate, loginTime: payload.time, logoutTime: null });
-        clearInputs(); render(); setMessage(`✅ ${n.fullName} logged in!`, 'success');
+        clearInputs(); 
+        render(); 
+        setMessage(`✅ ${n.fullName} logged in!`, 'success');
       }
 
       function handleLogout() {
         const n = readFormFields(); if (!n) return;
         const key = `${n.shift}|${n.last}|${n.first}|${n.mi}|${n.grade}|${n.section}`.toLowerCase();
+        
+        // Look in our strict local memory
         const rec = records.find(r => r.key === key);
-        if (!rec) return setMessage('No record found. Make sure all details match your log-in.', 'error');
+        if (!rec) return setMessage('No record found. Make sure ALL details match your log-in.', 'error');
         if (rec.logoutTime) return setMessage('Already logged out.', 'error');
 
         const payload = { date: currentDate, action: 'Log Out', shift: n.shift, lastName: n.last, firstName: n.first, mi: n.mi, grade: n.grade, section: n.section, time: new Date().toISOString() };
-        setMessage('Saving...', 'info'); sendToSheet(payload);
-        rec.logoutTime = payload.time; clearInputs(); render(); setMessage(`🚪 ${rec.fullName} logged out!`, 'success');
+        setMessage('Saving...', 'info'); 
+        sendToSheet(payload);
+        
+        rec.logoutTime = payload.time; 
+        clearInputs(); 
+        render(); 
+        setMessage(`🚪 ${rec.fullName} logged out!`, 'success');
       }
 
       function clearInputs() { shiftInput.value = ''; lastNameInput.value = ''; firstNameInput.value = ''; middleInitialInput.value = ''; gradeLevelInput.value = ''; sectionInput.value = ''; lastNameInput.focus(); }
